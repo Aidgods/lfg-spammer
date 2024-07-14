@@ -5,16 +5,21 @@ import threading
 import time
 
 session_ids = []
+
 def read_tokens(file_path):
     with open(file_path, 'r') as file:
         return [line.strip() for line in file.readlines()]
-
 
 session_ids = []
 current_token_index = 0
 consecutive_401_errors = 0
 max_consecutive_401_errors = 10
 tokens = read_tokens('tokens.txt')
+delay = input("what do you want the delay to be? ")
+threads = input("How many threads do you want? (i suggest 50 if you want a flooder and 5 if you want it to be normal) ")
+text =  input("What do you want as the text? ")
+threads = int(threads)
+
 def worker():
     global session_ids, current_token_index, consecutive_401_errors, tokens
     lock = threading.Lock()
@@ -32,7 +37,7 @@ def worker():
                         "readRestriction": "followed",
                         "description": {
                             "locale": "en-US",
-                            "text": "join discordgg/shadowgarden for the best party tools"
+                            "text": text
                         },
                         "searchHandleVisibility": "xboxlive"
                     }
@@ -64,7 +69,7 @@ def worker():
                 'User-Agent': 'okhttp/3.12.1',
                 'X-UserAgent': 'Android/191121000 SM-A715F.AndroidPhone'
             }
-            scid = "00000000-0000-0000-0000-00006cfa0c1e"
+            scid = "93ac0100-efec-488c-af85-e5850ff4b5bd"
             response = requests.put(f'https://sessiondirectory.xboxlive.com/serviceconfigs/{scid}/sessiontemplates/global(lfg)/sessions/{session_id}', json=payload, headers=headers)
             
             if response.status_code in [401, 403]:
@@ -74,9 +79,13 @@ def worker():
                     consecutive_401_errors = 0
             else:
                 consecutive_401_errors = 0
-            print('PUT Status Code:', response.status_code)
-            print('PUT Data:', response.json())
             
+            # Change color based on status code
+            if response.status_code in [201, 204]:
+                print("\033[92mSent request for session ID:", session_id, "\033[0m")
+            elif response.status_code in [401, 403]:
+                print("\033[91mToken is dead\033[0m")
+
             payload2 = {
                 "type": "search",
                 "sessionRef": {
@@ -95,24 +104,20 @@ def worker():
             }
 
             response2 = requests.post('https://sessiondirectory.xboxlive.com/handles?include=relatedInfo', json=payload2, headers=headers)
-            print('POST Status Code:', response2.status_code)
-            print('POST Data:', response2.json())
             
             if len(session_ids) >= 2:
                 with lock:  
                     oldest_session_id = session_ids.pop(0)
-                time.sleep(10)  
+                time.sleep(delay)  
                 
                 delete_url = f'https://sessiondirectory.xboxlive.com/serviceconfigs/{scid}/sessiontemplates/global(lfg)/sessions/{oldest_session_id}/members/me'
                 delete_response = requests.delete(delete_url, headers=headers)
-                print('DELETE Status Code:', delete_response.status_code)
-                print('DELETE Data:', delete_response.json())
             
         except requests.exceptions.RequestException as error:
             print('Error:', error)
 
 def main():
-    with ThreadPoolExecutor(max_workers=300) as executor:
+    with ThreadPoolExecutor(max_workers=threads) as executor:
         for _ in range(5000):  
             executor.submit(worker)
 

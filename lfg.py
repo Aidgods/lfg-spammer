@@ -3,7 +3,7 @@ from uuid import uuid4
 from concurrent.futures import ThreadPoolExecutor
 import threading
 import time
-
+import random
 session_ids = []
 
 def read_tokens(file_path):
@@ -65,7 +65,7 @@ def worker():
 
             headers = {
                 'x-xbl-contract-version': '107',
-                'authorization': tokens[current_token_index],
+                'authorization': random.choice(tokens),
                 'User-Agent': 'okhttp/3.12.1',
                 'X-UserAgent': 'Android/191121000 SM-A715F.AndroidPhone'
             }

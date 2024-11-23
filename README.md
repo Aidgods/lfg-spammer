@@ -28,8 +28,6 @@ This script automates LFG (Looking For Group) spam messages. **Please note that 
    pip install -r requirements.txt  
    ```  
 
-3. Configure your accounts and other settings in the `config.json` file.  
-
 ## Usage  
 Run the script using the following command:  
 ```bash  
